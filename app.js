@@ -183,11 +183,44 @@ function switchTab(tabId) {
     });
 }
 
+// Load real data from the FastAPI backend
+async function loadStoreData(storeId) {
+    try {
+        const baseUrl = "http://127.0.0.1:8000";
+        const urls = [
+            `${baseUrl}/api/dashboard?store_id=${encodeURIComponent(storeId)}`,
+            `${baseUrl}/api/inventory?store_id=${encodeURIComponent(storeId)}&limit=100`,
+            `${baseUrl}/api/recommendations?store_id=${encodeURIComponent(storeId)}`
+        ];
+
+        const responses = await Promise.all(urls.map(url => fetch(url)));
+        const failed = responses.find(response => !response.ok);
+
+        if (failed) {
+            throw new Error(`La API respondió con HTTP ${failed.status}`);
+        }
+
+        const [dashboard, inventory, recommendations] =
+            await Promise.all(responses.map(response => response.json()));
+
+        storeDatabase[storeId] = {
+            metricsModel: dashboard,
+            inventoryModel: inventory,
+            recommendationsModel: recommendations
+        };
+
+        currentStoreId = storeId;
+        renderAllSections();
+        showToast(`Datos reales cargados: ${storeId}`);
+    } catch (error) {
+        console.error("Error al cargar datos de la API:", error);
+        showToast("No se pudieron cargar los datos. Revisa que FastAPI siga activo.");
+    }
+}
+
 // Switch Store Dropdown
 function switchStore(storeId) {
-    currentStoreId = storeId;
-    renderAllSections();
-    showToast(`Cambiado a Tienda ${storeId}`);
+    loadStoreData(storeId);
 }
 
 // Render Entire Dashboard
@@ -647,6 +680,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (action === 'resolve') resolveRecommendation(sku);
     });
 
-    // Initial render
-    renderAllSections();
+    // Load initial data from the API
+    loadStoreData(currentStoreId);
 });
