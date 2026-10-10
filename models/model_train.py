@@ -107,10 +107,7 @@ if df.empty:
         "las variables de historial."
     )
 
-
-# ============================================================
 # 5. SEPARAR ENTRENAMIENTO Y PRUEBA POR FECHA
-# ============================================================
 
 print("\nSeparando entrenamiento y prueba...")
 
