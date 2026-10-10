@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glazed Co. | Delivery App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #D2691E; /* Chocolate */
+            --secondary: #FF69B4; /* Donut Pink */
+            --bg-color: #F8F9FA;
+            --text-dark: #1A1A24;
+            --text-gray: #8E8E93;
+            --escalation: #9C27B0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-dark); padding-top: 70px; }
+
+        /* HEADER & LOGO */
+        .header { position: fixed; top: 0; width: 100%; background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 50; }
+        .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .logo-icon { width: 40px; height: 40px; background: var(--secondary); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 1.2rem; }
+        .logo-text { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); letter-spacing: -0.5px; }
+        .logo-text span { color: var(--secondary); }
+
+        /* CART */
+        .cart-btn { background: var(--bg-color); border: 1px solid #eee; padding: 10px 20px; border-radius: 30px; font-weight: 600; cursor: pointer; display: flex; gap: 8px; align-items: center; transition: 0.2s; }
+        .cart-btn:hover { background: #eee; }
+        .cart-count { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+
+        /* HERO BANNER (ESTILO DELIVERY CLÁSICO) */
+        .hero {
+            margin: 20px 30px;
+            border-radius: 20px;
+            padding: 60px 40px;
+            color: var(--text-dark); /* Texto negro */
+            background-color: var(--secondary); /* Rosa Pastel Sólido */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(255, 105, 180, 0.2);
+        }
+        .hero h2 { font-size: 3.5rem; margin-bottom: 10px; font-weight: 800; line-height: 1.1; letter-spacing: -1px;}
+        .hero p { font-size: 1.2rem; font-weight: 500; opacity: 0.9; }
+
+        /* CATEGORIES FILTERS */
+        .categories { display: flex; gap: 15px; padding: 0 30px; overflow-x: auto; margin-bottom: 30px; scrollbar-width: none; }
+        .cat-btn { padding: 10px 25px; border-radius: 30px; border: none; background: white; font-weight: 600; color: var(--text-gray); cursor: pointer; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: 0.2s; }
+        .cat-btn:hover { background: #f0f0f0; }
+        .cat-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(210, 105, 30, 0.3); }
+
+        /* PRODUCT GRID */
+        .product-section { padding: 0 30px; margin-bottom: 40px; }
+        .section-title { font-size: 1.4rem; margin-bottom: 20px; color: var(--text-dark); font-weight: 700; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; }
+
+        .card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.04); transition: transform 0.2s; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        .card-img { height: 180px; background-color: #eee; background-size: cover; background-position: center; }
+        .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .card-title { font-weight: 700; font-size: 1.15rem; margin-bottom: 5px; }
+        .card-desc { font-size: 0.85rem; color: var(--text-gray); margin-bottom: 15px; line-height: 1.4; flex: 1; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+        .price { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
+        .add-btn { background: var(--secondary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; transition: 0.2s; display:flex; justify-content:center; align-items:center; }
+        .add-btn:hover { background: #ff47a3; transform: scale(1.05); }
+
+        /* TOAST NOTIFICATION (CARRITO) */
+        .toast { position: fixed; top: 90px; right: 30px; background: var(--success); color: white; padding: 12px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,200,83,0.3); font-weight: 600; font-size: 0.9rem; transform: translateX(150%); transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 100; display:flex; align-items:center; gap:10px; }
+        .toast.show { transform: translateX(0); }
+
+        /* CHATBOT WIDGET */
+        .chatbot-btn { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 2rem; cursor: pointer; box-shadow: 0 5px 20px rgba(210, 105, 30, 0.4); transition: 0.3s; z-index: 1000;}
+        .chatbot-btn:hover { transform: scale(1.1); }
+        .chatbot-window { position: fixed; bottom: 105px; right: 30px; width: 360px; height: 500px; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; overflow: hidden; transform: scale(0); transform-origin: bottom right; transition: 0.3s; z-index: 1000; border: 1px solid #eee;}
+        .chatbot-window.open { transform: scale(1); }
+
+        .chat-header { background: var(--text-dark); color: white; padding: 20px; display: flex; align-items: center; gap: 15px; }
+        .chat-header .close-btn { margin-left: auto; cursor: pointer; font-size: 1.2rem; color: #aaa;}
+        .chat-header .close-btn:hover { color: white; }
+
+        .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #f9f9f9; }
+        .msg { max-width: 85%; padding: 12px 16px; border-radius: 15px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word;}
+        .msg.bot { background: white; border: 1px solid #eee; border-bottom-left-radius: 2px; }
+        .msg.user { background: var(--primary); color: white; margin-left: auto; border-bottom-right-radius: 2px; }
+        .msg.system-escalate { background: var(--escalation); color: white; font-weight: bold; border-radius: 8px; text-align: center; margin: 10px 0; font-size: 0.85rem; padding: 10px;}
+
+        .chat-footer { padding: 15px; background: white; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        .chat-footer input { flex: 1; padding: 12px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none; font-size: 0.95rem;}
+        .chat-footer button { width: 45px; height: 45px; background: var(--primary); color: white; border: none; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display:flex; justify-content:center; align-items:center;}
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <header class="header">
+        <div class="logo-container">
+            <div class="logo-icon"><i class="fas fa-cookie-bite"></i></div>
+            <div class="logo-text">Glazed<span>Co.</span></div>
+        </div>
+        <button class="cart-btn"><i class="fas fa-shopping-bag"></i> <span class="cart-count" id="cart-counter">0</span></button>
+    </header>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast" id="toastMsg">
+        <i class="fas fa-check-circle"></i> Producto agregado al carrito
+    </div>
+
+    <!-- BANNER ROSA ESTILO DELIVERY -->
+    <section class="hero">
+        <div>
+            <h2>Antojo dulce a tu puerta</h2>
+            <p>Pide ahora y recibe envío gratis en órdenes mayores a $150.</p>
+        </div>
+    </section>
+
+    <!-- FILTROS DE CATEGORÍAS -->
+    <div class="categories" id="filter-container">
+        <button class="cat-btn active" onclick="filterProducts('all', this)">Todos</button>
+        <button class="cat-btn" onclick="filterProducts('alimentos', this)">Donas & Alimentos</button>
+        <button class="cat-btn" onclick="filterProducts('caliente', this)">Bebidas Calientes</button>
+        <button class="cat-btn" onclick="filterProducts('fria', this)">Bebidas Frías</button>
+    </div>
+
+    <!-- PRODUCTOS -->
+    <section class="product-section">
+        <h3 class="section-title">Nuestro Catálogo</h3>
+        <div class="grid" id="product-grid">
+
+            <!-- ALIMENTOS -->
+            <div class="card" data-category="alimentos">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=400&auto=format&fit=crop');"></div>
+                <div class="card-body">
+                    <h4 class="card-title">Dona Glaseada Clásica</h4>
+                    <p class="card-desc">La receta original. Suave, esponjosa y recién horneada.</p>
+                    <div class="card-footer">
+                        <span class="price">$25.00</span>
+                        <button class="add-btn" onclick="addToCart()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" data-category="alimentos">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1527515637-ed8533ed4108?q=80&w=400&auto=format&fit=crop');"></div>
+                <div class="card-body">
+                    <h4 class="card-title">Dona Chocolate Avellana</h4>
+                    <p class="card-desc">Cobertura de chocolate oscuro con trozos de avellana crocante.</p>
+                    <div class="card-footer">
+                        <span class="price">$35.00</span>
+                        <button class="add-btn" onclick="addToCart()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" data-category="alimentos">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1528735602780-2552fd46c7af?q=80&w=400&auto=format&fit=crop');"></div>
+                <div class="card-body">
+                    <h4 class="card-title">Sándwich Pavo y Panela</h4>
+                    <p class="card-desc">Pan artesanal, pechuga de pavo, queso panela y espinaca fresca.</p>
+                    <div class="card-footer">
+                        <span class="price">$65.00</span>
+                        <button class="add-btn" onclick="addToCart()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BEBIDAS CALIENTES -->
+            <div class="card" data-category="caliente">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1559525839-b184a4d698c7?q=80&w=400&auto=format&fit=crop');"></div>
+                <div class="card-body">
+                    <h4 class="card-title">Café Latte Clásico</h4>
+                    <p class="card-desc">Espresso de origen balanceado con leche espumada caliente.</p>
+                    <div class="card-footer">
+                        <span class="price">$55.00</span>
+                        <button class="add-btn" onclick="addToCart()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" data-category="caliente">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=400&auto=format&fit=crop');"></div>
+                <div class="card-body">
+                    <h4 class="card-title">Café Americano Oscuro</h4>
+                    <p class="card-desc">Café de especialidad tueste oscuro, notas a chocolate.</p>
+                    <div class="card-footer">
+                        <span class="price">$40.00</span>
+                        <button class="add-btn" onclick="addToCart()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BEBIDAS FRÍAS -->
+            <div class="card" data-category="fria">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1461023058943-0708e5223eeb?q=80&w=400&auto=format&fit=crop');"></div>
+                <div class="card-body">
+                    <h4 class="card-title">Frappé Moka Caramelo</h4>
+                    <p class="card-desc">Bebida helada de chocolate, café y caramelo con crema batida.</p>
+                    <div class="card-footer">
+                        <span class="price">$75.00</span>
+                        <button class="add-btn" onclick="addToCart()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" data-category="fria">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?q=80&w=400&auto=format&fit=crop');"></div>
+                <div class="card-body">
+                    <h4 class="card-title">Cold Brew Embotellado</h4>
+                    <p class="card-desc">Extracción en frío de 18 horas. Refrescante y con alta cafeína.</p>
+                    <div class="card-footer">
+                        <span class="price">$60.00</span>
+                        <button class="add-btn" onclick="addToCart()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" data-category="fria">
+                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1556679343-c7306c1976bc?q=80&w=400&auto=format&fit=crop');"></div>
+                <div class="card-body">
+                    <h4 class="card-title">Smoothie Frutos Rojos</h4>
+                    <p class="card-desc">Mezcla helada de fresa, frambuesa y mora azul sin lácteos.</p>
+                    <div class="card-footer">
+                        <span class="price">$65.00</span>
+                        <button class="add-btn" onclick="addToCart()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- CHATBOT WIDGET (NLP) -->
+    <div class="chatbot-btn" onclick="toggleChat()">
+        <i class="fas fa-headset"></i>
+    </div>
+
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="chat-header">
+            <div style="background: var(--primary); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div>
+                <h4 style="margin:0; font-size:1rem;">Soporte Glazed</h4>
+                <p style="margin:0; font-size:0.75rem; color:#eee;">En línea</p>
+            </div>
+            <i class="fas fa-times close-btn" onclick="toggleChat()"></i>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="msg bot">¡Hola! Soy tu asistente virtual de compras. Puedes preguntarme con tus propias palabras sobre tu pedido, el menú, o políticas de la tienda.<br><br><em>Ej. "¿Dónde está mi pedido?" o "¿Tienen opciones frías?"</em></div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chatInput" placeholder="Escribe tu duda aquí..." onkeypress="handleEnter(event)">
+            <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DE CARRITO ---
+        let cartItems = 0;
+        function addToCart() {
+            cartItems++;
+            document.getElementById('cart-counter').innerText = cartItems;
+
+            const toast = document.getElementById('toastMsg');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // --- LÓGICA DE FILTROS ---
+        function filterProducts(category, btnElement) {
+            document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                if(category === 'all') {
+                    card.style.display = 'flex';
+                } else {
+                    if(card.getAttribute('data-category') === category) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // --- LÓGICA DE CHATBOT CON PALABRAS CLAVE (NLP Básico) ---
+        function toggleChat() { document.getElementById('chatbotWindow').classList.toggle('open'); }
+        function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if(!text) return;
+
+            const chatBody = document.getElementById('chatBody');
+            chatBody.innerHTML += `<div class="msg user">${text}</div>`;
+            input.value = '';
+            chatBody.scrollBy(0, 1000);
+
+            const textLower = text.toLowerCase();
+
+            // Simulación de procesamiento de lenguaje
+            setTimeout(() => {
+                let reply = "";
+                let escalate = false;
+
+                // 1. Detección de intenciones (Keywords)
+                const isStatus = /estatus|pedido|llega|donde|rastreo|rastrear|tarda/i.test(textLower);
+                const isMenu = /menu|recomiendas|sugerencia|opciones|catalogo|frio|caliente/i.test(textLower);
+                const isPolicy = /politica|devolucion|reembolso|regresar/i.test(textLower);
+                const isComplaint = /queja|mal|error|frio|tarde|asqueroso|falta/i.test(textLower);
+                const isHuman = /humano|asesor|persona|agente|ayuda/i.test(textLower);
+
+                // 2. Lógica de respuesta y escalamiento
+                if (isComplaint) {
+                    reply = "Lamentamos mucho el inconveniente con tu experiencia. Por favor, ten a la mano tu número de orden para que uno de nuestros agentes pueda resolverlo inmediatamente.";
+                    escalate = true;
+                }
+                else if (isStatus) {
+                    reply = "Para revisar el estatus de tu entrega, puedes ir a la sección de 'Mis Órdenes'. Generalmente, nuestros repartidores tardan entre 25 a 40 minutos en llegar.";
+                }
+                else if (isMenu) {
+                    reply = "¡Tenemos excelentes opciones! Te recomiendo probar nuestra especialidad: La Dona Glaseada Clásica, perfecta para acompañar con un Café Latte Caliente o nuestro famoso Frappé Moka.";
+                }
+                else if (isPolicy) {
+                    reply = "Por regulaciones de higiene, no aceptamos devoluciones de alimentos preparados. Sin embargo, si hubo un error de nuestra parte en tu orden, tramitaremos un reembolso a tu método de pago.";
+                }
+                else if (isHuman || textLower.length > 55) {
+                    // Escala si el usuario pide explícitamente un humano, o si el texto es muy largo y complejo para el bot
+                    reply = "Entiendo. Tu consulta es un poco más específica, por lo que te transferiré con un agente humano para brindarte una mejor atención.";
+                    escalate = true;
+                }
+                else {
+                    // Fallback para consultas cortas irreconocibles
+                    reply = "No estoy seguro de entender todos los detalles de tu solicitud. Te pondré en contacto con un agente de soporte de la tienda para ayudarte personalmente.";
+                    escalate = true;
+                }
+
+                chatBody.innerHTML += `<div class="msg bot">${reply}</div>`;
+
+                // 3. Animación de Escalamiento a Persona
+                if (escalate) {
+                    setTimeout(() => {
+                        chatBody.innerHTML += `<div class="msg system-escalate"><i class="fas fa-user-headset"></i> Conectando con un Agente humano...</div>`;
+                        chatBody.scrollBy(0, 1000);
+                    }, 1500);
+                }
+
+                chatBody.scrollBy(0, 1000);
+            }, 700);
+        }
+    </script>
+</body>
+</html>
