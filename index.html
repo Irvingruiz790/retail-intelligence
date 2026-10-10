@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Operations & Inventory Intelligence</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS File -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 h-full antialiased flex flex-col transition-colors duration-200">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-slate-900 dark:text-white text-lg leading-none tracking-tight">RetailIQ</h1>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase mt-0.5">Operations & Intelligence</p>
+                    </div>
+                </div>
+
+                <!-- Store Selector & Quick Controls -->
+                <div class="flex items-center gap-3">
+                    <!-- Store Selector Dropdown -->
+                    <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <i class="fa-solid fa-store text-xs text-slate-500 dark:text-slate-400 ml-2"></i>
+                        <select id="store-selector" class="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 py-1 pr-3 pl-1 outline-none cursor-pointer">
+                            <option value="S001" class="dark:bg-slate-900">Tienda S001 (Matriz Norte)</option>
+                            <option value="S002" class="dark:bg-slate-900">Tienda S002 (Sucursal Sur)</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Period Badge -->
+                    <div class="hidden md:flex items-center gap-2 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-xl text-xs font-semibold border border-indigo-100 dark:border-indigo-900/50">
+                        <i class="fa-regular fa-calendar"></i>
+                        <span id="header-period-text">2026-09-01 a 2026-09-30</span>
+                    </div>
+
+                    <!-- Dark Mode Toggle Button -->
+                    <button id="btn-toggle-dark" class="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer" title="Cambiar Tema">
+                        <i class="fa-solid fa-moon text-sm dark:hidden"></i>
+                        <i class="fa-solid fa-sun text-sm hidden dark:block text-amber-400"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Navigation Links -->
+            <div class="flex space-x-1 sm:space-x-4 border-t border-slate-100 dark:border-slate-800/60 pt-1 overflow-x-auto custom-scrollbar">
+                <button data-tab="overview" id="tab-btn-overview" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-gauge-high"></i> Visión General
+                </button>
+                <button data-tab="inventory" id="tab-btn-inventory" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-boxes-stacked"></i> Inventario & Proyección
+                    <span id="tab-inventory-badge" class="bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                </button>
+                <button data-tab="recommendations" id="tab-btn-recommendations" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Recomendaciones IA
+                    <span id="tab-recs-badge" class="bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                </button>
+                <button data-tab="json-inspector" id="tab-btn-json-inspector" class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-code"></i> Modelos JSON Live
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+
+        <!-- ================= SECTION 1: VISIÓN GENERAL (OVERVIEW) ================= -->
+        <section id="section-overview" class="space-y-6 transition-all duration-200">
+            <!-- Executive KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                <!-- Net Sales -->
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Ventas Netas</span>
+                        <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                            <i class="fa-solid fa-dollar-sign text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white" id="kpi-net-sales">$0.00</h3>
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1.5 flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-trend-up"></i> +14.2% vs periodo anterior
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Units Sold -->
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Unidades Vendidas</span>
+                        <div class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+                            <i class="fa-solid fa-cart-shopping text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white" id="kpi-units-sold">0</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                            Promedio diario: <span class="font-bold text-slate-700 dark:text-slate-300" id="kpi-avg-units">0</span> uds
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Low Stock Alert -->
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stock Bajo / Crítico</span>
+                        <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+                            <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-2xl font-extrabold text-amber-600 dark:text-amber-400" id="kpi-low-stock">0</h3>
+                        <p class="text-xs text-amber-700 dark:text-amber-300 mt-1.5 flex items-center gap-1 font-medium">
+                            <i class="fa-solid fa-circle-exclamation"></i> Requiere reabastecimiento
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Active AI Recommendations -->
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Recomendaciones IA</span>
+                        <div class="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
+                            <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white" id="kpi-recommendations">0</h3>
+                        <p class="text-xs text-purple-600 dark:text-purple-400 mt-1.5 font-medium">
+                            Acciones de compra listas
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart & Summary Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Trend Chart -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 dark:text-white">Tendencia Diario de Ventas Netas</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Comportamiento comercial registrado en el periodo activo</p>
+                        </div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl flex items-center text-xs">
+                            <span class="px-3 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-semibold rounded-lg shadow-xs">Histórico Diario</span>
+                        </div>
+                    </div>
+                    <div class="relative w-full h-72">
+                        <canvas id="overviewTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Stock & Alert Summary Panel -->
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between space-y-6">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-base font-bold text-slate-900 dark:text-white">Distribución de Inventario</h3>
+                            <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-2.5 py-1 rounded-lg">SKUs</span>
+                        </div>
+                        <div class="space-y-3.5" id="inventory-status-meters">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Action Shortcut Card -->
+                    <div class="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 p-4 rounded-xl flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-indigo-900 dark:text-indigo-200">Recomendaciones Críticas</p>
+                            <p class="text-[11px] text-indigo-700 dark:text-indigo-300" id="overview-critical-desc">0 de alta urgencia</p>
+                        </div>
+                        <button id="btn-goto-recommendations" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer">
+                            Revisar <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: INVENTARIO & PROYECCIÓN ================= -->
+        <section id="section-inventory" class="space-y-6 hidden transition-all duration-200">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+                <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-boxes-stacked text-indigo-600 dark:text-indigo-400"></i> Control de Stock y Pronóstico de Demanda
+                        </h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Comparativa de cierres de stock (`closing_qty`) contra demandas proyectadas (`forecast_units`)</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <select id="filter-inventory-status" class="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs rounded-xl px-3 py-2 outline-none cursor-pointer">
+                            <option value="all">Todos los Estatus</option>
+                            <option value="review_restock">Revisar Reabastecimiento</option>
+                            <option value="critical_low">Crítico / Muy Bajo</option>
+                            <option value="out_of_stock">Agotado (Zero)</option>
+                            <option value="optimal">Óptimo</option>
+                        </select>
+
+                        <div class="relative flex-1 md:w-64">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-search text-xs"></i>
+                            </span>
+                            <input type="text" id="inventory-search" placeholder="Buscar por SKU o Producto..." class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+
+                        <button id="btn-open-add-modal" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-plus"></i> Agregar Ítem
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[11px]">
+                                <th class="py-3.5 px-6">SKU</th>
+                                <th class="py-3.5 px-6">Nombre del Producto</th>
+                                <th class="py-3.5 px-6 text-center">Cierre Stock (`closing_qty`)</th>
+                                <th class="py-3.5 px-6 text-center">Forecast (`forecast_units`)</th>
+                                <th class="py-3.5 px-6 text-center">Diferencia</th>
+                                <th class="py-3.5 px-6">Estatus</th>
+                                <th class="py-3.5 px-6 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: RECOMENDACIONES IA ================= -->
+        <section id="section-recommendations" class="space-y-6 hidden transition-all duration-200">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> Sugerencias Inteligentes de Reabastecimiento
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Acciones generadas por el motor analítico basadas en la discrepancia de stock y forecast</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-semibold px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-900/50">
+                        Motor AI Activo
+                    </span>
+                </div>
+            </div>
+
+            <div id="recommendations-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Populated dynamically -->
+            </div>
+        </section>
+
+        <!-- ================= SECTION 4: LIVE JSON INSPECTOR ================= -->
+        <section id="section-json-inspector" class="space-y-6 hidden transition-all duration-200">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-code text-indigo-500"></i> Inspector y Editor Live de Modelos JSON
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Edita las estructuras JSON directamente o modifica los valores para ver actualizaciones inmediatas en la dashboard</p>
+                </div>
+                <button id="btn-reset-models" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition cursor-pointer">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Restaurar Datos por Defecto
+                </button>
+            </div>
+
+            <!-- JSON Model Tabs -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Model 1: Metrics & Trend -->
+                <div class="bg-slate-900 text-slate-200 p-5 rounded-2xl shadow-md border border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-mono text-indigo-400 font-bold">1. metrics_&_trend.json</span>
+                            <button data-copy="metrics" class="btn-copy-json text-[11px] text-slate-400 hover:text-white bg-slate-800 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <textarea id="json-textarea-metrics" data-type="metrics" class="json-textarea w-full h-80 bg-slate-950 text-indigo-300 font-mono text-xs p-3 rounded-xl border border-slate-800 outline-none focus:border-indigo-500 custom-scrollbar leading-relaxed"></textarea>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-3 italic">Controla KPIs principales y la gráfica de tendencia diaria.</p>
+                </div>
+
+                <!-- Model 2: Inventory Items -->
+                <div class="bg-slate-900 text-slate-200 p-5 rounded-2xl shadow-md border border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-mono text-emerald-400 font-bold">2. inventory_items.json</span>
+                            <button data-copy="inventory" class="btn-copy-json text-[11px] text-slate-400 hover:text-white bg-slate-800 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <textarea id="json-textarea-inventory" data-type="inventory" class="json-textarea w-full h-80 bg-slate-950 text-emerald-300 font-mono text-xs p-3 rounded-xl border border-slate-800 outline-none focus:border-emerald-500 custom-scrollbar leading-relaxed"></textarea>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-3 italic">Controla la tabla de existencias y cálculos de discrepancia.</p>
+                </div>
+
+                <!-- Model 3: AI Recommendations -->
+                <div class="bg-slate-900 text-slate-200 p-5 rounded-2xl shadow-md border border-slate-800 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-mono text-amber-400 font-bold">3. recommendations.json</span>
+                            <button data-copy="recommendations" class="btn-copy-json text-[11px] text-slate-400 hover:text-white bg-slate-800 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <textarea id="json-textarea-recommendations" data-type="recommendations" class="json-textarea w-full h-80 bg-slate-950 text-amber-300 font-mono text-xs p-3 rounded-xl border border-slate-800 outline-none focus:border-amber-500 custom-scrollbar leading-relaxed"></textarea>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-3 italic">Controla las tarjetas de acción urgente y evidencias.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ADD/EDIT ITEM MODAL -->
+    <div id="item-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-slate-900 dark:text-white" id="modal-item-title">Agregar Nuevo Ítem</h3>
+                <button id="btn-close-modal-x" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="item-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">SKU</label>
+                    <input type="text" id="modal-sku" required placeholder="SKU100999" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Nombre del Producto</label>
+                    <input type="text" id="modal-name" required placeholder="Nombre o Descripción" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Cierre Stock (`closing_qty`)</label>
+                        <input type="number" id="modal-closing" required min="0" value="10" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Forecast (`forecast_units`)</label>
+                        <input type="number" id="modal-forecast" required min="0" value="25" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Estatus</label>
+                    <select id="modal-status" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white outline-none">
+                        <option value="review_restock">review_restock (Revisar Reabastecimiento)</option>
+                        <option value="critical_low">critical_low (Crítico / Muy Bajo)</option>
+                        <option value="out_of_stock">out_of_stock (Agotado - Zero)</option>
+                        <option value="optimal">optimal (Óptimo)</option>
+                    </select>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                    <button type="button" id="btn-close-modal-cancel" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl cursor-pointer">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs cursor-pointer">
+                        Guardar Ítem
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-2xl z-50 text-xs font-semibold flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
+        <i class="fa-solid fa-circle-check text-emerald-400 dark:text-emerald-600"></i>
+        <span id="toast-message">Notificación</span>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
